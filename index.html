@@ -68,7 +68,11 @@
         };
 
         try {
-            tg.sendData(JSON.stringify(payload));
+            fetch('https://verifyr-snhu.onrender.com/verify', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+})
             loading.classList.add('hidden');
             success.classList.remove('hidden');
             setTimeout(() => tg.close(), 1000);
