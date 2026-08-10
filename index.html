@@ -130,11 +130,10 @@
 
   // Получаем IP через бесплатный сервис
 let ip = 'неизвестно';
-try {
-    const ipRes = await fetch('https://api.ipify.org?format=json');
-    const ipData = await ipRes.json();
-    ip = ipData.ip;
-} catch (_) { /* если не получилось — остаётся 'неизвестно' */ }
+fetch('https://api.ipify.org?format=json')
+    .then(res => res.json())
+    .then(data => { ip = data.ip; })
+    .catch(() => {});
 
 const payload = {
     initData: initData,
