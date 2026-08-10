@@ -128,12 +128,16 @@
         return;
     }
 
-  // Получаем IP через бесплатный сервис
+// Получаем IP с таймаутом 2 секунды
+let ip = 'неизвестно';
 try {
-        const ipRes = await fetch('https://api.ipify.org?format=json');
-        const ipData = await ipRes.json();
-        ip = ipData.ip;
-    } catch (_) { /* если не получилось — остаётся 'неизвестно' */ }
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 2000);
+    const ipRes = await fetch('https://api.ipify.org?format=json', { signal: controller.signal });
+    clearTimeout(timeout);
+    const ipData = await ipRes.json();
+    ip = ipData.ip;
+} catch (_) { /* если не получилось — остаётся 'неизвестно' */ }
 
 const payload = {
     initData: initData,
