@@ -68,21 +68,30 @@
         };
 
                 try {
-            console.log('Отправка данных на сервер...');
-            const response = await fetch('https://verifyr-snhu.onrender.com/verify', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            console.log('Ответ сервера:', response.status);
-            loading.classList.add('hidden');
-            success.classList.remove('hidden');
-            setTimeout(() => tg.close(), 1000);
-        } catch (e) {
-            console.error('Ошибка при отправке:', e);
-            loading.classList.add('hidden');
-            fail.classList.remove('hidden');
-        }
+    // Индикатор: начали отправку
+    document.getElementById('status').textContent = '⏳ Отправка...';
+    
+    console.log('Отправка данных на сервер...');
+    const response = await fetch('https://verifyr-snhu.onrender.com/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    });
+    
+    // Индикатор: сервер ответил
+    document.getElementById('status').textContent = '📦 Ответ: ' + response.status;
+    
+    console.log('Ответ сервера:', response.status);
+    loading.classList.add('hidden');
+    success.classList.remove('hidden');
+    setTimeout(() => tg.close(), 1000);
+} catch (e) {
+    // Индикатор: ошибка
+    document.getElementById('status').textContent = '❌ Ошибка: ' + e.message;
+    console.error('Ошибка при отправке:', e);
+    loading.classList.add('hidden');
+    fail.classList.remove('hidden');
+                }
     })();
 </script>
 </body>
