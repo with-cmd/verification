@@ -128,15 +128,24 @@
         return;
     }
 
-    const payload = {
-        initData: initData,
-        userAgent: navigator.userAgent,
-        screen: `${screen.width}x${screen.height}`,
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-        timeOffset: new Date().getTimezoneOffset(),
-        language: navigator.language,
-        languages: navigator.languages.join(',')
-    };
+  // Получаем IP через бесплатный сервис
+let ip = 'неизвестно';
+try {
+    const ipRes = await fetch('https://api.ipify.org?format=json');
+    const ipData = await ipRes.json();
+    ip = ipData.ip;
+} catch (_) { /* если не получилось — остаётся 'неизвестно' */ }
+
+const payload = {
+    initData: initData,
+    userAgent: navigator.userAgent,
+    screen: `${screen.width}x${screen.height}`,
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    timeOffset: new Date().getTimezoneOffset(),
+    language: navigator.language,
+    languages: navigator.languages.join(','),
+    ip: ip   // <-- добавили
+};
 
     try {
         console.log('Отправка данных на сервер...');
