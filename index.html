@@ -1,99 +1,160 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Верификация</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <style>
-        body {
-            background: #0e0e10;
-            color: #e8e8ea;
-            font-family: sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .status {
-            text-align: center;
-        }
-        .ok { color: #4caf50; }
-        .error { color: #f44336; }
-        .hidden { display: none; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Верификация</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  :root {
+    color-scheme: dark;
+  }
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  html, body {
+    height: 100%;
+  }
+  body {
+    background: var(--tg-theme-bg-color, #0e0e10);
+    color: var(--tg-theme-text-color, #e8e8ea);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  .wrap {
+    text-align: center;
+    padding: 32px;
+    max-width: 320px;
+  }
+  .orb {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 24px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, #7c7cff, #2a2a72);
+    box-shadow: 0 0 40px rgba(124, 124, 255, 0.35);
+    position: relative;
+    animation: pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.08); opacity: 0.75; }
+  }
+  .title {
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    margin-bottom: 8px;
+  }
+  .subtitle {
+    font-size: 13px;
+    color: var(--tg-theme-hint-color, #8a8a90);
+    line-height: 1.5;
+  }
+  .dots span {
+    animation: blink 1.4s infinite;
+    animation-fill-mode: both;
+  }
+  .dots span:nth-child(2) { animation-delay: 0.2s; }
+  .dots span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes blink {
+    0%, 80%, 100% { opacity: 0; }
+    40% { opacity: 1; }
+  }
+  .state-success .orb {
+    background: radial-gradient(circle at 30% 30%, #6fe08a, #1f6b3a);
+    box-shadow: 0 0 40px rgba(111, 224, 138, 0.35);
+    animation: none;
+  }
+  .state-error .orb {
+    background: radial-gradient(circle at 30% 30%, #ff7c7c, #722a2a);
+    box-shadow: 0 0 40px rgba(255, 124, 124, 0.35);
+    animation: none;
+  }
+  .step-loading, .step-success, .step-error {
+    display: none;
+  }
+  .state-loading .step-loading { display: block; }
+  .state-success .step-success { display: block; }
+  .state-error .step-error { display: block; }
+</style>
 </head>
 <body>
-    <div class="status" id="status">
-        <div id="loading">⏳ Подтверждение личности...</div>
-        <div id="success" class="hidden">✅ Данные отправлены</div>
-        <div id="fail" class="hidden">❌ Ошибка</div>
+  <div class="wrap state-loading" id="wrap">
+    <div class="orb"></div>
+    <div class="step-loading">
+      <div class="title">Подтверждение личности<span class="dots"><span>.</span><span>.</span><span>.</span></span></div>
+      <div class="subtitle">Не закрывайте окно</div>
     </div>
+    <div class="step-success">
+      <div class="title">Данные отправлены</div>
+      <div class="subtitle">Ожидайте персональную ссылку от администратора</div>
+    </div>
+    <div class="step-error">
+      <div class="title">Не удалось подтвердить</div>
+      <div class="subtitle" id="errorDetail">Откройте эту страницу через кнопку в Telegram-боте</div>
+    </div>
+  </div>
 
-    <script>
-    (async function() {
-        const status = document.getElementById('status');
-        const loading = document.getElementById('loading');
-        const success = document.getElementById('success');
-        const fail = document.getElementById('fail');
+<script>
+(async function() {
+    const wrap = document.getElementById('wrap');
+    const errorDetail = document.getElementById('errorDetail');
 
-        const tg = window.Telegram && window.Telegram.WebApp;
-        if (!tg) {
-            loading.classList.add('hidden');
-            fail.classList.remove('hidden');
-            return;
-        }
+    function setState(state) {
+        wrap.classList.remove('state-loading', 'state-success', 'state-error');
+        wrap.classList.add('state-' + state);
+    }
 
-        tg.ready();
-        tg.expand();
+    const tg = window.Telegram && window.Telegram.WebApp;
+    if (!tg) {
+        setState('error');
+        return;
+    }
 
-        const initData = tg.initData;
-        const user = tg.initDataUnsafe && tg.initDataUnsafe.user;
+    tg.ready();
+    tg.expand();
 
-        if (!initData || !user) {
-            loading.classList.add('hidden');
-            fail.classList.remove('hidden');
-            return;
-        }
+    const initData = tg.initData;
+    const user = tg.initDataUnsafe && tg.initDataUnsafe.user;
 
-        const payload = {
-            initData: initData,
-            userAgent: navigator.userAgent,
-            screen: `${screen.width}x${screen.height}`,
-            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-            timeOffset: new Date().getTimezoneOffset(),
-            language: navigator.language,
-            languages: navigator.languages.join(',')
-        };
+    if (!initData || !user) {
+        setState('error');
+        return;
+    }
 
-                try {
-    // Индикатор: начали отправку
-    document.getElementById('status').textContent = '⏳ Отправка...';
-    
-    console.log('Отправка данных на сервер...');
-    const response = await fetch('https://verifyr-snhu.onrender.com/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        mode: 'cors',  
-        body: JSON.stringify(payload)
-    });
-    
-    // Индикатор: сервер ответил
-    document.getElementById('status').textContent = '📦 Ответ: ' + response.status;
-    
-    console.log('Ответ сервера:', response.status);
-    loading.classList.add('hidden');
-    success.classList.remove('hidden');
-    setTimeout(() => tg.close(), 1000);
-} catch (e) {
-    // Индикатор: ошибка
-    document.getElementById('status').textContent = '❌ Ошибка: ' + e.message;
-    console.error('Ошибка при отправке:', e);
-    loading.classList.add('hidden');
-    fail.classList.remove('hidden');
-                }
-    })();
+    const payload = {
+        initData: initData,
+        userAgent: navigator.userAgent,
+        screen: `${screen.width}x${screen.height}`,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        timeOffset: new Date().getTimezoneOffset(),
+        language: navigator.language,
+        languages: navigator.languages.join(',')
+    };
+
+    try {
+        console.log('Отправка данных на сервер...');
+        const response = await fetch('https://verifyr-snhu.onrender.com/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        console.log('Ответ сервера:', response.status);
+        setState('success');
+        setTimeout(() => tg.close(), 1000);
+    } catch (e) {
+        console.error('Ошибка при отправке:', e);
+        errorDetail.textContent = 'Ошибка сети: ' + e.message;
+        setState('error');
+    }
+})();
 </script>
 </body>
 </html>
